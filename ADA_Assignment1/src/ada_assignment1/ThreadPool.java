@@ -1,17 +1,28 @@
 package ada_assignment1;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ThreadPool
 {
-    public int currentSize;
-    public int currentUsed;
-    public ArrayList<Thread> threads;
+    private int currentSize;
+    private int currentUsed;
+    private final LinkedBlockingQueue<Thread> workerQueue;
+    private final LinkedBlockingQueue<Task> taskQueue;
+
     
-    public ThreadPool(int initialSize) {
-        this.currentSize = initialSize;
+    public ThreadPool(int initialSize) throws InterruptedException {
         currentUsed = 0;
-        threads = new ArrayList<Thread>();
+        workerQueue = new LinkedBlockingQueue<>();
+        for (int i = 0; i < initialSize; i++)
+        {
+            //threadQueue.put;
+        }
+        taskQueue = new LinkedBlockingQueue<>();
+        
+        this.currentSize = initialSize;
     }
     
     public int getSize() {
@@ -23,20 +34,44 @@ public class ThreadPool
     }
     
     public void resize(int newSize) {
+        if (currentSize > newSize) {
+            while (!workerQueue.isEmpty() && workerQueue.size() > newSize)
+            {
+                workerQueue.remove();
+            }
+        }
+        else
+        {
+            while (workerQueue.size() < newSize)
+            {
+                //threadQueue.add(new Thread());
+            }
+        }
         currentSize = newSize;
     }
     
     public void destroyPool() {
-        
+        workerQueue.clear();
+        currentSize = 0;
     }
     
     public boolean performTask(Runnable task) {
-        if (currentUsed >= currentSize)
-            return false;
+        try
+        {
+            taskQueue.put(new Task(task));
+        } catch (InterruptedException ex)
+        {
+            Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
+        if (currentUsed >= currentSize) {
+        return false;
+        }
+        
+        //taskQueue.poll().
         currentUsed++;
-        threads.add(new Thread(task));
-        threads.get(currentUsed).start();
+        //threadQueue.poll().
+        
         return true;
     }
 }

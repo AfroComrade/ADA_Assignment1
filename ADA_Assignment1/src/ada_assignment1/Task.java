@@ -1,20 +1,23 @@
 package ada_assignment1;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class Task<E, F> implements Runnable
 {
-    E e;
-    int id;
+    private E param;
+    private TaskId id;
     
-    public Task(E e) {
-        this.e = e;
-        id = e.hashCode();
+    public Task(E param) {
+        this.param = param;
+        id = UniqueIdentifier.get().assignId();
     }
     
-    public int getID() {
-        return id;
+    public int getId() {
+        return id.getIdNumber();
     }
-    
-    public void nodifyAll() {
+        
+    public void notifyAll(F progress) {
         throw new UnsupportedOperationException();
     }
     
@@ -29,7 +32,17 @@ public class Task<E, F> implements Runnable
     @Override
     public void run()
     {
-        throw new UnsupportedOperationException();
+        do
+        {
+            try
+            {
+                wait();
+                
+            } catch (InterruptedException ex)
+            {
+                Logger.getLogger(Task.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } while (true);
     }
     
 }
