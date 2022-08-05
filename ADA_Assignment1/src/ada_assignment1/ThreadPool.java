@@ -9,10 +9,14 @@ public class ThreadPool
 {
     private int currentSize;
     private int currentUsed;
+    
+    // Might need to go over this. What happens if a thread deep in the queue is done? 
+    // Do we dequeue until we reach the thread that's done?
+    // Then enqueue the dequeued threads upto that point?
     private final LinkedBlockingQueue<Thread> workerQueue;
     private final LinkedBlockingQueue<Task> taskQueue;
 
-    
+    // Threads created here and added to the thread pool
     public ThreadPool(int initialSize) throws InterruptedException {
         currentUsed = 0;
         workerQueue = new LinkedBlockingQueue<>();
@@ -52,9 +56,11 @@ public class ThreadPool
     
     public void destroyPool() {
         workerQueue.clear();
-        currentSize = 0;
+        currentUsed = 0;
     }
     
+    // When a thread finishes, remember not to destroy it but to stop it and return it to the number of
+    //  available threads for use
     public boolean performTask(Runnable task) {
         try
         {

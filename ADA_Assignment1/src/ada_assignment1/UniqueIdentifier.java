@@ -29,6 +29,8 @@ public class UniqueIdentifier
         return _instance;
     }
     
+    // We will likely neet a mutex algorithm for this
+    // Incase multiple threads call this instance at the same time
     public TaskId assignId()
     {
         return new TaskId(++idCount);
