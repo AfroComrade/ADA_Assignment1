@@ -16,10 +16,11 @@ public class ThreadPool
     private final LinkedBlockingQueue<Runnable> taskQueue;
 
     // Threads created here and added to the thread pool
-    public ThreadPool(int initialSize) throws InterruptedException 
+    public ThreadPool(int initialSize)
     {
         currentUsed = 0;
         workers = new ArrayList();
+        taskQueue = new LinkedBlockingQueue<>();
         
         // This works by adding and starting threads at runtime
         // They won't be closed until later.
@@ -29,8 +30,7 @@ public class ThreadPool
             workers.add(thread);
             thread.start();
         }
-        taskQueue = new LinkedBlockingQueue<>();
-        
+
         this.currentSize = initialSize;
     }
     
@@ -72,13 +72,35 @@ public class ThreadPool
         workers.clear();
         currentUsed = 0;
         currentSize = 0;
+        System.out.println("Pool destruction in progress");
+    }
+    
+    public void tempNotify()
+    {
+        for (PooledThread thread : workers)
+        {
+            synchronized (thread)
+            {
+                thread.notifyAll();
+            }
+        }
     }
     
     // boolean returns if there is currently a thread available to run the task
     public boolean performTask(Runnable task) {
+        Task task2 = (Task)task;
+        
         try
         {
-            taskQueue.put(task);
+            taskQueue.put(task2);
+            for (PooledThread pt : workers)
+            {
+                task2.addListener(pt.ds);
+                synchronized(pt)
+                {
+                    pt.notify();
+                }
+            }
         } 
         catch (Exception ex)
         {
@@ -90,10 +112,17 @@ public class ThreadPool
     
     // This is going to keep attempting to run tasks from the queue until stop is requested
     // Wait if there is no task in the queue
-    private class PooledThread extends Thread
+    public class PooledThread extends Thread
     {
         // Keep a separate stop requested so we can stop individual threads if we need to resize
         boolean stopRequested = false;
+        DoneObserver ds;
+        
+        public PooledThread()
+        {
+            super();
+            ds = new DoneObserver(this);
+        }
         
         @Override
         public void run()
@@ -102,11 +131,23 @@ public class ThreadPool
                 while (!stopRequested)
                 {
                     if (taskQueue.isEmpty())
-                        wait();
+                    {
+                        synchronized (this)
+                        {
+                            wait();
+                        }
+                    }
+
                     else if (!stopRequested && !taskQueue.isEmpty())
                     {
+                        Runnable task;
+                        synchronized (taskQueue)
+                        {
+                            task = taskQueue.poll();
+                        }
                         currentUsed++;
-                        taskQueue.poll().run();
+                        if (task != null)
+                            task.run();
                         currentUsed--;
                     }
                 }

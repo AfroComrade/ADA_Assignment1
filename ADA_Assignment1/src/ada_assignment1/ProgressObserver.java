@@ -16,6 +16,8 @@ public class ProgressObserver implements TaskObserver<Integer>
     int totalProgress;
     int avgProgress;
     
+    Runnable current;
+    
     private ProgressObserver()
     {
         runnables = new HashMap<Runnable, Integer>();
@@ -36,10 +38,16 @@ public class ProgressObserver implements TaskObserver<Integer>
         System.out.println("Average progress = " + avgProgress);
     }
     
-    @Override
-    public void update(int progress, Runnable runnable)
+    public void update(Integer progress, Runnable run)
     {
-        runnables.replace(runnable, progress);
+        current = run;
+        update(progress);
+    }
+    
+    @Override
+    public void update(Integer progress)
+    {
+        runnables.replace(current, progress);
         
         avgProgress = 0;
         
@@ -49,5 +57,6 @@ public class ProgressObserver implements TaskObserver<Integer>
         }
         
         avgProgress = avgProgress/numRunners;
+        current = null;
     }
 }
