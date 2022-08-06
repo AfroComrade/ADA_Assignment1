@@ -9,18 +9,12 @@ package ada_assignment1;
  *
  * @author jestr
  */
-public class TaskId
+public class ConcreteObsever<F> implements TaskObserver<F>
 {
 
-    private int idNumber;
-
-    public TaskId(int idNumber)
+    @Override
+    public void update(F progress)
     {
-        this.idNumber = idNumber;
-    }
-
-    public int getIdNumber()
-    {
-        return idNumber;
+        System.out.println("Progress: " + progress);
     }
 }

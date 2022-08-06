@@ -11,29 +11,30 @@ package ada_assignment1;
  */
 public class UniqueIdentifier
 {
+
     private static UniqueIdentifier _instance;
     private int idCount;
-    
+
     private UniqueIdentifier()
     {
         idCount = 0;
     }
-    
+
     public static UniqueIdentifier get()
     {
         if (_instance == null)
         {
             _instance = new UniqueIdentifier();
         }
-        
+
         return _instance;
     }
-    
+
     // We will likely neet a mutex algorithm for this
     // Incase multiple threads call this instance at the same time
     public TaskId assignId()
     {
         return new TaskId(++idCount);
     }
-    
+
 }

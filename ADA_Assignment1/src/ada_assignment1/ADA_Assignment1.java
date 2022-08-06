@@ -9,29 +9,41 @@ public class ADA_Assignment1
     public static void main(String[] args)
     {
         ThreadPool.get();
-        ThreadPool.get().performTask(new Task(0)
+        
+        for (int k = 0; k < 50; k++)
         {
-            
-            
-            @Override
-            public void run()
+            ThreadPool.get().performTask(new Task(0)
             {
-                addListener(new ConcreteObsever());
-                
-                for (int i =0; i < 100; ++i)
+
+
+                @Override
+                public void run()
                 {
-                    try
+                    addListener(new ConcreteObsever());
+
+                    for (int i =0; i < 100; ++i)
                     {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex)
-                    {
-                        Logger.getLogger(ADA_Assignment1.class.getName()).log(Level.SEVERE, null, ex);
+                        try
+                        {
+                            Thread.sleep(20);
+                        } catch (InterruptedException ex)
+                        {
+                            Logger.getLogger(ADA_Assignment1.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        System.out.println("TaskID: " + this.getId() + " Count: " + i);
+                        notifyAll(i);
                     }
-                    System.out.println(i);
-                    notifyAll(i);
                 }
+            });
+            
+            try
+            {
+                Thread.sleep(5000);
+            } catch (InterruptedException ex)
+            {
+                Logger.getLogger(ADA_Assignment1.class.getName()).log(Level.SEVERE, null, ex);
             }
-        });
+        }
         
         
     }

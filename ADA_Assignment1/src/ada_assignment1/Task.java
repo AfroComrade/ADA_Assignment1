@@ -1,9 +1,6 @@
 package ada_assignment1;
 
 import java.util.LinkedList;
-import java.util.Observable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class Task<E, F> implements Runnable
 {
@@ -14,6 +11,7 @@ public abstract class Task<E, F> implements Runnable
     public Task(E param) {
         this.param = param;
         id = UniqueIdentifier.get().assignId();
+        listeners = new LinkedList<>();
     }
     
     public int getId() {
@@ -28,7 +26,13 @@ public abstract class Task<E, F> implements Runnable
     
     // Also maybe not just an int, but something else. Like an ID clas, and a TaskIdentifier class to provide the ID
     
-    public abstract void notifyAll(F progress);
+    public void notifyAll(F progress)
+    {
+        for (TaskObserver listener : listeners)
+        {
+            listener.update(progress);
+        }
+    }
     
     // This is for the observer pattern. 
     // Task Observer
@@ -53,15 +57,6 @@ public abstract class Task<E, F> implements Runnable
         {
             super(param);
             totalString = "";
-        }
-
-        @Override
-        public void notifyAll(Integer progress)
-        {
-            for (TaskObserver listener : listeners)
-            {
-                listener.update(progress, this);
-            }
         }
 
         @Override

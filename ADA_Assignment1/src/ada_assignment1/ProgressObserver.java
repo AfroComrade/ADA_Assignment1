@@ -8,46 +8,54 @@ import java.util.HashSet;
  *
  * @author Yeran
  */
-public class ProgressObserver implements TaskObserver<Integer>
-{
-    HashMap<Runnable, Integer> runnables;
-    private static ProgressObserver instance;
-    int numRunners;
-    int totalProgress;
-    int avgProgress;
-    
-    private ProgressObserver()
-    {
-        runnables = new HashMap<Runnable, Integer>();
-        numRunners = 0;
-    }
-    
-    public void addRunnable(Runnable runnable)
-    {
-        if (instance == null)
-            instance = new ProgressObserver();
-        
-        runnables.put(runnable, 0);
-        numRunners++;
-    }
-    
-    public void printProgress()
-    {
-        System.out.println("Average progress = " + avgProgress);
-    }
-    
-    @Override
-    public void update(int progress, Runnable runnable)
-    {
-        runnables.replace(runnable, progress);
-        
-        avgProgress = 0;
-        
-        for (Runnable task : runnables.keySet())
-        {
-            avgProgress += runnables.get(task);
-        }
-        
-        avgProgress = avgProgress/numRunners;
-    }
-}
+
+//public class ProgressObserver implements TaskObserver<Integer>
+//{
+//    private HashMap<Runnable, Integer> runnables;
+//    private static ProgressObserver instance;
+//    int numRunners;
+//    int totalProgress;
+//    int avgProgress;
+//    
+//    private ProgressObserver()
+//    {
+//        runnables = new HashMap<Runnable, Integer>();
+//        numRunners = 0;
+//    }
+//    
+//    public void addRunnable(Runnable runnable)
+//    {
+//        if (instance == null)
+//            instance = new ProgressObserver();
+//        
+//        runnables.put(runnable, 0);
+//        numRunners++;
+//    }
+//    
+//    public void printProgress()
+//    {
+//        System.out.println("Average progress = " + avgProgress);
+//    }
+//    
+//    @Override
+//    public void update(int progress, Runnable runnable)
+//    {
+//        runnables.replace(runnable, progress);
+//        
+//        avgProgress = 0;
+//        
+//        for (Runnable task : runnables.keySet())
+//        {
+//            avgProgress += runnables.get(task);
+//        }
+//        
+//        avgProgress = avgProgress/numRunners;
+//    }
+//    
+//    /**
+//     * PSUEDO CODE
+//     * 
+//     * Task update() triggers listener event which tells observer "i am finished"
+//     * Observer sends thread to threadpool to wait
+//     */
+//}
