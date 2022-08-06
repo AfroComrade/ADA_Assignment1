@@ -9,14 +9,15 @@ import java.util.logging.Logger;
 public class ThreadPool
 {
     private int currentSize;
-    private int currentUsed;
+    private volatile int currentUsed;
     
     // Switched to arraylist so we can better access the threads in the future
     private final ArrayList<PooledThread> workers;
     private final LinkedBlockingQueue<Runnable> taskQueue;
 
     // Threads created here and added to the thread pool
-    public ThreadPool(int initialSize) throws InterruptedException {
+    public ThreadPool(int initialSize) throws InterruptedException 
+    {
         currentUsed = 0;
         workers = new ArrayList();
         
@@ -41,8 +42,10 @@ public class ThreadPool
         return currentSize - currentUsed;
     }
     
-    public void resize(int newSize) {
-        if (currentSize > newSize) {
+    public void resize(int newSize) 
+    {
+        if (currentSize > newSize) 
+        {
             while (workers.size() > newSize)
             {
                 PooledThread worker = workers.remove(0);
@@ -107,9 +110,6 @@ public class ThreadPool
                         currentUsed--;
                     }
                 }
-                
-                stop();
-                
             } catch (Exception ex)
             {
                 Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, ex);

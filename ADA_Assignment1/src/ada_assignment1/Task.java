@@ -1,11 +1,14 @@
 package ada_assignment1;
 
+import java.util.LinkedList;
+import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public abstract class Task<E, F> implements Runnable
 {
     private E param;
+    private LinkedList<TaskObserver<F>> listeners;
     private TaskId id;
     
     public Task(E param) {
@@ -25,34 +28,63 @@ public abstract class Task<E, F> implements Runnable
     
     // Also maybe not just an int, but something else. Like an ID clas, and a TaskIdentifier class to provide the ID
     
-    public void notifyAll(F progress) {
-        throw new UnsupportedOperationException();
-    }
+    public abstract void notifyAll(F progress);
     
     // This is for the observer pattern. 
-    // Task oBSERVER
+    // Task Observer
     public void addListener(TaskObserver<F> o) {
-        throw new UnsupportedOperationException();
+        listeners.add(o);
     }
     
     public void removeListener(TaskObserver<F> o) {
-        throw new UnsupportedOperationException();
+        listeners.remove(o);
     }
     
     @Override
-    public void run()
-    {
-        do
-        {
-            try
-            {
-                wait();
-                
-            } catch (InterruptedException ex)
-            {
-                Logger.getLogger(Task.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } while (true);
-    }
+    public abstract void run();
     
+    public class writerTask extends Task<String, Integer>
+    {
+        // Write a string 100 times to internal holder with 100mil sleep between each print
+        Integer progress = 0;
+        String totalString;
+        
+        public writerTask(String param)
+        {
+            super(param);
+            totalString = "";
+        }
+
+        @Override
+        public void notifyAll(Integer progress)
+        {
+            for (TaskObserver listener : listeners)
+            {
+                listener.update(progress, this);
+            }
+        }
+
+        @Override
+        public void run()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                totalString += param;
+                try 
+                {
+                    Thread.sleep(100);
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                progress++;
+                if ((i % 5) == 0)
+                {
+                    notifyAll(progress);
+                }
+            }
+            System.out.println(totalString);
+        }
+        
+    }
 }
