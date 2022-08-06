@@ -14,6 +14,7 @@ public class ProgressObserver implements TaskObserver<Integer>
     private static ProgressObserver instance;
     int numRunners;
     int totalProgress;
+    int avgProgress;
     
     private ProgressObserver()
     {
@@ -30,12 +31,17 @@ public class ProgressObserver implements TaskObserver<Integer>
         numRunners++;
     }
     
+    public void printProgress()
+    {
+        System.out.println("Average progress = " + avgProgress);
+    }
+    
     @Override
     public void update(int progress, Runnable runnable)
     {
         runnables.replace(runnable, progress);
         
-        int avgProgress = 0;
+        avgProgress = 0;
         
         for (Runnable task : runnables.keySet())
         {
@@ -43,7 +49,5 @@ public class ProgressObserver implements TaskObserver<Integer>
         }
         
         avgProgress = avgProgress/numRunners;
-        System.out.println("Average progress = " + avgProgress);
-        
     }
 }
