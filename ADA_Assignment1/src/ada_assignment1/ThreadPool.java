@@ -1,6 +1,7 @@
 package ada_assignment1;
 
 //import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -10,19 +11,22 @@ public class ThreadPool
     private int currentSize;
     private int currentUsed;
     
-    // Might need to go over this. What happens if a thread deep in the queue is done? 
-    // Do we dequeue until we reach the thread that's done?
-    // Then enqueue the dequeued threads upto that point?
-    private final LinkedBlockingQueue<Thread> workerQueue;
-    private final LinkedBlockingQueue<Task> taskQueue;
+    // Switched to arraylist so we can better access the threads in the future
+    private final ArrayList<PooledThread> workers;
+    private final LinkedBlockingQueue<Runnable> taskQueue;
 
     // Threads created here and added to the thread pool
     public ThreadPool(int initialSize) throws InterruptedException {
         currentUsed = 0;
-        workerQueue = new LinkedBlockingQueue<>();
+        workers = new ArrayList();
+        
+        // This works by adding and starting threads at runtime
+        // They won't be closed until later.
         for (int i = 0; i < initialSize; i++)
         {
-            //threadQueue.put;
+            PooledThread thread = new PooledThread();
+            workers.add(thread);
+            thread.start();
         }
         taskQueue = new LinkedBlockingQueue<>();
         
@@ -39,45 +43,78 @@ public class ThreadPool
     
     public void resize(int newSize) {
         if (currentSize > newSize) {
-            while (!workerQueue.isEmpty() && workerQueue.size() > newSize)
+            while (workers.size() > newSize)
             {
-                workerQueue.remove();
+                PooledThread worker = workers.remove(0);
+                worker.stopRequested = true;
             }
         }
         else
         {
-            while (workerQueue.size() < newSize)
+            while (workers.size() < newSize)
             {
-                //threadQueue.add(new Thread());
+                PooledThread thread = new PooledThread();
+                workers.add(thread);
+                thread.start();
             }
         }
         currentSize = newSize;
     }
     
     public void destroyPool() {
-        workerQueue.clear();
+        for (PooledThread thread : workers)
+        {
+            thread.stopRequested = true;
+        }
+        workers.clear();
         currentUsed = 0;
+        currentSize = 0;
     }
     
-    // When a thread finishes, remember not to destroy it but to stop it and return it to the number of
-    //  available threads for use
+    // boolean returns if there is currently a thread available to run the task
     public boolean performTask(Runnable task) {
         try
         {
-            taskQueue.put(new Task(task));
-        } catch (InterruptedException ex)
+            taskQueue.put(task);
+        } 
+        catch (Exception ex)
         {
             Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        if (currentUsed >= currentSize) {
-        return false;
-        }
-        
-        //taskQueue.poll().
-        currentUsed++;
-        //threadQueue.poll().
-        
-        return true;
+        // currently used threads incremented by the pooled thread that runs the task
+        return (currentUsed >= currentSize);
     }
+    
+    // This is going to keep attempting to run tasks from the queue until stop is requested
+    // Wait if there is no task in the queue
+    private class PooledThread extends Thread
+    {
+        // Keep a separate stop requested so we can stop individual threads if we need to resize
+        boolean stopRequested = false;
+        
+        @Override
+        public void run()
+        {
+            try {
+                while (!stopRequested)
+                {
+                    if (taskQueue.isEmpty())
+                        wait();
+                    else if (!stopRequested && !taskQueue.isEmpty())
+                    {
+                        currentUsed++;
+                        taskQueue.poll().run();
+                        currentUsed--;
+                    }
+                }
+                
+                stop();
+                
+            } catch (Exception ex)
+            {
+                Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
 }
