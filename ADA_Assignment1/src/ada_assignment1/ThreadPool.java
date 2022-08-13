@@ -1,7 +1,6 @@
 package ada_assignment1;
 
 //import java.util.ArrayList;
-import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,6 +70,10 @@ public class ThreadPool
     
     // boolean returns if there is currently a thread available to run the task
     public boolean performTask(Runnable task) {
+        
+        if (!task.getClass().isInstance(Task.class))
+            return false;
+        
         Task task2 = (Task)task;
         
         try
