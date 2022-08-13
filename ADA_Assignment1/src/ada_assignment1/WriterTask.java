@@ -41,10 +41,13 @@ public class WriterTask extends Task<String, Boolean>
     {
         WriterTask wt = new WriterTask("Hello");
         
-        ThreadPool pool = new ThreadPool(3);
-        for (int i = 0; i < 50; i++)
+        ThreadPool pool = ThreadPool.get();
+        
+        pool.performTask(wt);
+        
+        for (int i = 0; i < 4; i++)
         {
-            pool.performTask(new WriterTask(i+ " "));
+            pool.performTask(new WriterTask("task:"+i+", "));
         }
         System.out.println(pool.getAvailable());
         
@@ -62,8 +65,35 @@ public class WriterTask extends Task<String, Boolean>
             e.printStackTrace();
         }
         
-        System.out.println(pool.getAvailable());
-        //pool.destroyPool();
+        System.out.println("Getavail: " + pool.getAvailable());
+        
+        try{
+            Thread.sleep(6000);
+        } catch (Exception e)
+        {
+            
+        }
+        
+        System.out.println("Resize:");
+        
+        pool.resize(4);
+        
+        for (int i = 5; i < 11; i++)
+        {
+            pool.performTask(new WriterTask("task:"+i+", "));
+        }
+
+        
+        try{
+            Thread.sleep(6000);
+        } catch (Exception e)
+        {
+            
+        }
+
+        
+        System.out.println("Dest");
+        pool.destroyPool();
         
 
     }
