@@ -60,8 +60,11 @@ public class ThreadPool
     public void resize(int newSize)
     {
         currentSize = newSize;
+        // DEBUG
+        System.out.println("New threadsize: " + newSize + " change: (" + (newSize - numOfThreads) + ")");
         synchronized (taskQueue)
         {
+            
             taskQueue.notifyAll();
         }
         while (numOfThreads < currentSize)
@@ -144,9 +147,9 @@ public class ThreadPool
                         currentUsed--;
                     }
                 }
-                System.out.println("Deleting. NumThreads:" + numOfThreads);
+                //System.out.println("Deleting. NumThreads:" + numOfThreads);
                 numOfThreads--;
-                System.out.println("New threads: " + numOfThreads);
+                //System.out.println("New threads: " + numOfThreads);
             } catch (Exception ex)
             {
                 Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, ex);

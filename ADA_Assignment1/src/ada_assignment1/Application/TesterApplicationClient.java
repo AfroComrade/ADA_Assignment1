@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package ada_assignment1.Application;
 
 import ada_assignment1.Task;
@@ -38,35 +34,27 @@ public class TesterApplicationClient
         Scanner keyboardInput = new Scanner(System.in);
         try
         {
-            //socket = new Socket(HOST_NAME, HOST_PORT);
-            
             socket = new Socket(HOST_NAME, HOST_PORT);
         } catch (IOException e)
         {
             System.err.println("Client could not make connection: " + e);
             System.exit(-1);
         }
-        PrintWriter pw; // output stream to server
-        //BufferedReader br; // input stream from server
+        PrintWriter pw;
         try
-        {  // create an autoflush output stream for the socket
+        {  
             new Thread(new ChatRoomListener(socket)).start();
             pw = new PrintWriter(socket.getOutputStream(), true);
-            // create a buffered input stream for this socket
-            //br = new BufferedReader(new InputStreamReader(
-            //       socket.getInputStream()));
-            // play the game until value is correctly guessed
-            boolean finished = false;
+
             do
             {
                 String userInput = keyboardInput.nextLine();
-                //String serverResponse = br.readLine();
-                //System.out.println(serverResponse);
+
                 if (userInput.equals("QUIT"))
                 {
                     break;
                 } else
-                {  // get user input and sent it to server
+                {  
                     Task task = new Task<String, String>(userInput)
                     {
                         @Override
@@ -77,7 +65,6 @@ public class TesterApplicationClient
                             {
                                 out[i] = ((char) (this.param.charAt(i) + 2));
                             }
-                            //out[param.length()] = '\0';
 
                             this.param = new String(out).trim();
                             pw.println(this.param);
@@ -86,11 +73,9 @@ public class TesterApplicationClient
                         }
                     };
                     ThreadPool.get().performTask(task);
-//                    pw.println(userInput);
                 }
             } while (true);
             pw.close();
-            //br.close();
             socket.close();
         } catch (IOException e)
         {
@@ -117,16 +102,38 @@ public class TesterApplicationClient
                 // create a buffered input stream for this socket
                 BufferedReader br = new BufferedReader(new InputStreamReader(
                         socket.getInputStream()));
-                // play the game until value is correctly guessed
+
                 boolean finished = false;
                 do
                 {
-                    String serverResponse = br.readLine();
-                    if (serverResponse != null && serverResponse.equals("QUIT"))
-                    {
-                        finished = true;
-                    }
-                    System.out.println(serverResponse);
+                    //if (br.ready())
+                    //{
+                        String serverResponse = br.readLine();
+                        if (serverResponse != null && serverResponse.equals("QUIT"))
+                        {
+                            finished = true;
+                        }
+                        Task task = new Task<String, String>(serverResponse.trim())
+                        {
+                            @Override
+                            public void run()
+                            {
+                                char[] out = new char[0xff];
+                                for (int i = 0; i < this.param.length(); i++)
+                                {
+                                    out[i] = ((char) (this.param.charAt(i) - 4));
+                                }
+
+                                this.param = new String(out).trim();
+                                //pw.println(this.param);
+                                System.out.println(param);
+
+                                notifyAll(param);
+                            }
+                        };
+                        ThreadPool.get().performTask(task);
+                        //System.out.println(serverResponse);
+                   // }
                     Thread.sleep(10);
                 } while (!finished);
                 br.close();

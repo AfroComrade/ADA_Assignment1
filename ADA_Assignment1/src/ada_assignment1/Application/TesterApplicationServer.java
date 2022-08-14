@@ -60,12 +60,17 @@ public class TesterApplicationServer
             {  // block until the next client requests a connection
                 // note that the server socket could set an accept timeout
                 Socket socket = serverSocket.accept();
+               
                 System.out.println("Connection made with "
                         + socket.getInetAddress());
                 // start a game with this connection, note that a server
                 // might typically keep a reference to each game
                 ChatRoom chatter = new ChatRoom(socket);
                 Thread thread = new Thread(chatter);
+                
+                // Resize threadpool based on connections to server.
+                ThreadPool.get().resize(connections.size());
+                
                 thread.start();
             }
             serverSocket.close();
@@ -87,7 +92,9 @@ public class TesterApplicationServer
         private Socket socket;
         private PrintWriter pw;
         private BufferedReader br;
-        private Queue<String> strings;
+        private Queue<String> receivedStrings;
+        private Queue<String> outputQueue;
+
 
         public ChatRoom(Socket socket)
         {
@@ -96,7 +103,8 @@ public class TesterApplicationServer
 
             try
             {
-                this.strings = new LinkedBlockingQueue<>();
+                this.receivedStrings = new LinkedBlockingQueue<>();
+                this.outputQueue = new LinkedBlockingQueue<>();
 
                 pw = new PrintWriter(socket.getOutputStream(), true);
 
@@ -112,7 +120,15 @@ public class TesterApplicationServer
         {
             try
             {
-                pw.println("Welcome user!");
+                // Sending encrypted welcome
+                char[] welcome = new char[1000];
+                for (int i = 0; i < "Welcome User!".length(); i++)
+                {
+                    welcome[i] = ((char) ("Welcome User!".charAt(i) + 4));
+                }
+                pw.println(new String(welcome));
+                // ---
+                
                 String response;
                 do
                 {
@@ -147,25 +163,60 @@ public class TesterApplicationServer
                                 }
 
                                 this.param = new String(out);
-                                strings.add(param);
+                                receivedStrings.add(param);
                                 notifyAll("Decrypted: " + param);
                             }
                         };
-
-                        
-
                         ThreadPool.get().performTask(task);
                     }
 
-                    if (strings.size() > 0)
+                    if (receivedStrings.size() > 0)
                     {
-                        String str = strings.poll();
+                        String str = receivedStrings.poll();
+                        
+                        Task task = new Task<String, String>(str)
+                        {
+                            @Override
+                            public void run()
+                            {
+                                addListener(new TaskObserver<String>()
+                                {
+                                    @Override
+                                    public void update(String progress)
+                                    {
+                                        System.out.println(progress);
+                                    }
+                                });
+
+                                notifyAll("Received: " + param);
+                                char[] out = new char[1000];
+                                for (int i = 0; i < this.param.length(); i++)
+                                {
+                                    out[i] = ((char) (this.param.charAt(i) + 4));
+                                }
+
+                                this.param = new String(out).trim();
+                                notifyAll("Sending re-encrypted: " + param);
+                                
+                                outputQueue.add(param);
+                            }
+                        };
+                        ThreadPool.get().performTask(task);
+                    }
+                    
+                    if (outputQueue.size() > 0)
+                    {
+                        String out = outputQueue.poll();
                         for (Socket x : connections)
                         {
-                            PrintWriter printer = new PrintWriter(x.getOutputStream(), true);
-                            printer.println(str);
+                            if (this.socket != x)
+                            {
+                                PrintWriter printer = new PrintWriter(x.getOutputStream(), true);
+                                printer.println(out);
+                            }
                         }
                     }
+                    Thread.sleep(10);
                 } while (response == null || !response.equals("QUIT"));
                 
                 pw.close();
@@ -176,6 +227,9 @@ public class TesterApplicationServer
             } catch (IOException e)
             {
                 System.err.println("Server error with game: " + e);
+            } catch (InterruptedException ex)
+            {
+                Logger.getLogger(TesterApplicationServer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
