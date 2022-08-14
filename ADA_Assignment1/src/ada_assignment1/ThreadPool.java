@@ -122,7 +122,8 @@ public class ThreadPool
                     {
                         if (taskQueue.isEmpty())
                         {
-                            System.out.println("Waiting");
+                            // DEBUG
+                            //System.out.println("Waiting");
                             taskQueue.wait();
                         }
                     }

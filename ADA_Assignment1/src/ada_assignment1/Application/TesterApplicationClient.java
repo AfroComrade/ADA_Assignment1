@@ -4,6 +4,8 @@
  */
 package ada_assignment1.Application;
 
+import ada_assignment1.Task;
+import ada_assignment1.ThreadPool;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -65,7 +67,26 @@ public class TesterApplicationClient
                     break;
                 } else
                 {  // get user input and sent it to server
-                    pw.println(userInput);
+                    Task task = new Task<String, String>(userInput)
+                    {
+                        @Override
+                        public void run()
+                        {
+                            char[] out = new char[0xff];
+                            for (int i = 0; i < this.param.length(); i++)
+                            {
+                                out[i] = ((char) (this.param.charAt(i) + 2));
+                            }
+                            //out[param.length()] = '\0';
+
+                            this.param = new String(out).trim();
+                            pw.println(this.param);
+
+                            notifyAll(param);
+                        }
+                    };
+                    ThreadPool.get().performTask(task);
+//                    pw.println(userInput);
                 }
             } while (true);
             pw.close();

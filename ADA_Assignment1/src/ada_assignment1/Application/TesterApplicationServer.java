@@ -130,6 +130,16 @@ public class TesterApplicationServer
                             @Override
                             public void run()
                             {
+                                addListener(new TaskObserver<String>()
+                                {
+                                    @Override
+                                    public void update(String progress)
+                                    {
+                                        System.out.println(progress);
+                                    }
+                                });
+                                
+                                notifyAll("Received: " + param);
                                 char[] out = new char[1000];
                                 for (int i = 0; i < this.param.length(); i++)
                                 {
@@ -138,18 +148,11 @@ public class TesterApplicationServer
 
                                 this.param = new String(out);
                                 strings.add(param);
-                                notifyAll(param);
+                                notifyAll("Decrypted: " + param);
                             }
                         };
 
-                        task.addListener(new TaskObserver<String>()
-                        {
-                            @Override
-                            public void update(String progress)
-                            {
-                                System.out.println("TaskObserver: " + progress);
-                            }
-                        });
+                        
 
                         ThreadPool.get().performTask(task);
                     }
