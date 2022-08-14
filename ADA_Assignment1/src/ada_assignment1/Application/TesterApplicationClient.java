@@ -78,7 +78,7 @@ public class TesterApplicationClient
 
     }
     
-    private class ChatRoomListener implements Observer
+    private class ChatRoomListener implements Runnable
     {
 
         private Socket socket;
@@ -101,13 +101,13 @@ public class TesterApplicationClient
                 do
                 {
                     String serverResponse = br.readLine();
-                    if (serverResponse.equals("QUIT"))
+                    if (serverResponse != null && serverResponse.equals("QUIT"))
                     {
-                        break;
+                        finished = true;
                     }
                     System.out.println(serverResponse);
                     Thread.sleep(10);
-                } while (true);
+                } while (!finished);
                 br.close();
                 socket.close();
             } catch (IOException e)

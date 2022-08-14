@@ -4,6 +4,9 @@
  */
 package ada_assignment1.Application;
 
+import ada_assignment1.Task;
+import ada_assignment1.TaskObserver;
+import ada_assignment1.ThreadPool;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,6 +17,8 @@ import java.net.Socket;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -21,9 +26,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class TesterApplicationServer
 {
+
     private final int HOST_PORT = 9999;
     private boolean stopRequested;
-    static private LinkedList<Socket> connections;
+    private static LinkedList<Socket> connections;
 
     public TesterApplicationServer()
     {
@@ -93,7 +99,7 @@ public class TesterApplicationServer
                 this.strings = new LinkedBlockingQueue<>();
 
                 pw = new PrintWriter(socket.getOutputStream(), true);
-               
+
                 br = new BufferedReader(new InputStreamReader(
                         socket.getInputStream()));
             } catch (Exception e)
@@ -110,19 +116,55 @@ public class TesterApplicationServer
                 String response;
                 do
                 {
-                    String clientInputs = br.readLine();
-                    strings.add(clientInputs);
-                    response = strings.remove();
-                    
-                    for (Socket x : connections)
+                    response = null;
+
+                    if (br.ready())
                     {
-                        if (this.socket != x)
+                        response = br.readLine();
+                    }
+
+                    if (response != null)
+                    {
+                        Task task = new Task<String, String>(response)
+                        {
+                            @Override
+                            public void run()
+                            {
+                                char[] out = new char[1000];
+                                for (int i = 0; i < this.param.length(); i++)
+                                {
+                                    out[i] = ((char) (this.param.charAt(i) - 2));
+                                }
+
+                                this.param = new String(out);
+                                strings.add(param);
+                                notifyAll(param);
+                            }
+                        };
+
+                        task.addListener(new TaskObserver<String>()
+                        {
+                            @Override
+                            public void update(String progress)
+                            {
+                                System.out.println("TaskObserver: " + progress);
+                            }
+                        });
+
+                        ThreadPool.get().performTask(task);
+                    }
+
+                    if (strings.size() > 0)
+                    {
+                        String str = strings.poll();
+                        for (Socket x : connections)
                         {
                             PrintWriter printer = new PrintWriter(x.getOutputStream(), true);
-                            printer.println(response);
+                            printer.println(str);
                         }
                     }
-                } while (!response.equals("QUIT"));
+                } while (response == null || !response.equals("QUIT"));
+                
                 pw.close();
                 br.close();
                 System.out.println("Closing connection with "
