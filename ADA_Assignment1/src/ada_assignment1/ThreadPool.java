@@ -7,12 +7,13 @@ import java.util.logging.Logger;
 
 public class ThreadPool
 {
+
     private static ThreadPool _instance;
-    
+
     private volatile int currentSize;
     private volatile int numOfThreads;
     private volatile int currentUsed;
-    
+
     private final LinkedBlockingQueue<Runnable> taskQueue;
 
     // Threads created here and added to the thread pool
@@ -21,24 +22,42 @@ public class ThreadPool
         numOfThreads = 0;
         taskQueue = new LinkedBlockingQueue<>();
         this.currentSize = initialSize;
-        
+
         // This works by adding and starting threads at runtime
         // They won't be closed until later.
         for (int i = 0; i < initialSize; i++)
         {
-            newThread();
+            spawnThread();
         }
     }
-    
-    public int getSize() {
+
+    public static ThreadPool get()
+    {
+        if (_instance == null)
+        {
+            try
+            {
+                _instance = new ThreadPool(2);
+            } catch (Exception e)
+            {
+                Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, e);
+            }
+        }
+
+        return _instance;
+    }
+
+    public int getSize()
+    {
         return currentSize;
     }
-    
-    public int getAvailable() {
+
+    public int getAvailable()
+    {
         return currentSize - currentUsed;
     }
-    
-    public void resize(int newSize) 
+
+    public void resize(int newSize)
     {
         currentSize = newSize;
         synchronized (taskQueue)
@@ -47,86 +66,56 @@ public class ThreadPool
         }
         while (numOfThreads < currentSize)
         {
-            newThread();
+            spawnThread();
         }
     }
-    
-    public void newThread()
+
+    public void spawnThread()
     {
-        synchronized(this)
+        synchronized (this)
         {
-            PooledThread thread = new PooledThread();
+            WorkerThread thread = new WorkerThread();
             thread.start();
             numOfThreads++;
             this.notifyAll();
         }
     }
-    
-    public void destroyPool() 
+
+    public void destroyPool()
     {
         System.out.println("Pool destruction in progress");
         resize(0);
     }
-    
+
     // boolean returns if there is currently a thread available to run the task
-    public boolean performTask(Runnable task) {
-        
-        if (!task.getClass().isInstance(Task.class))
-            return false;
-        
-        Task task2 = (Task)task;
+    public boolean performTask(Runnable task)
+    {
+
+        //if (!task.getClass().isInstance(Task.class)) // Broke the thread pool
+        //    return false;
         
         try
         {
-            synchronized(taskQueue)
+            synchronized (taskQueue)
             {
-                taskQueue.put(task2);
+                taskQueue.put(task);
                 taskQueue.notifyAll();
             }
-        }
-        catch (Exception ex)
+        } catch (Exception ex)
         {
             Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, ex);
         }
         // currently used threads incremented by the pooled thread that runs the task
         return (currentUsed >= currentSize);
     }
-    
-    public static ThreadPool get()
+
+    public class WorkerThread extends Thread
     {
-        if (_instance == null)
-        {
-            try
-            {
-                _instance = new ThreadPool(2);
-            }
-            catch (Exception e)
-            {
-                Logger.getLogger(ThreadPool.class.getName()).log(Level.SEVERE, null, e);
-            }
-        }
-        
-        return _instance;
-    }
-    
-    // This is going to keep attempting to run tasks from the queue until stop is requested
-    // Wait if there is no task in the queue
-    public class PooledThread extends Thread
-    {
-        // Keep a separate stop requested so we can stop individual threads if we need to resize
-        DoneObserver ds;
-        
-        public PooledThread()
-        {
-            super();
-            ds = new DoneObserver(this);
-            System.out.println("Created: " + numOfThreads);
-        }
-        
         @Override
         public void run()
         {
-            try {
+            try
+            {
                 while (numOfThreads <= currentSize)
                 {
                     synchronized (taskQueue)
@@ -145,10 +134,12 @@ public class ThreadPool
                         {
                             task = taskQueue.poll();
                         }
-                        
+
                         currentUsed++;
                         if (task != null)
+                        {
                             task.run();
+                        }
                         currentUsed--;
                     }
                 }
@@ -161,5 +152,5 @@ public class ThreadPool
             }
         }
     }
-    
+
 }

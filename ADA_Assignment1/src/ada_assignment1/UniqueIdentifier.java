@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ada_assignment1;
 
 /**
@@ -31,7 +26,7 @@ public class UniqueIdentifier
     
     // We will likely neet a mutex algorithm for this
     // Incase multiple threads call this instance at the same time
-    public TaskId assignId()
+    public synchronized TaskId assignId()
     {
         return new TaskId(++idCount);
     }
