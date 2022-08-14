@@ -130,6 +130,7 @@ public class TesterApplicationServer
                 // ---
                 
                 String response;
+                boolean exit = false;
                 do
                 {
                     response = null;
@@ -172,7 +173,12 @@ public class TesterApplicationServer
 
                     if (receivedStrings.size() > 0)
                     {
-                        String str = receivedStrings.poll();
+                        String str = receivedStrings.poll().trim();
+                        
+                        if (str.contains("QUIT"))
+                        {
+                             break;
+                        }
                         
                         Task task = new Task<String, String>(str)
                         {
@@ -217,13 +223,16 @@ public class TesterApplicationServer
                         }
                     }
                     Thread.sleep(10);
-                } while (response == null || !response.equals("QUIT"));
+                } while (!exit);
                 
+                System.out.println("Closing socket.");
                 pw.close();
                 br.close();
                 System.out.println("Closing connection with "
                         + socket.getInetAddress());
                 socket.close();
+                
+                connections.remove(socket);
             } catch (IOException e)
             {
                 System.err.println("Server error with game: " + e);
