@@ -142,32 +142,7 @@ public class TesterApplicationServer
 
                     if (response != null)
                     {
-                        Task task = new Task<String, String>(response)
-                        {
-                            @Override
-                            public void run()
-                            {
-                                addListener(new TaskObserver<String>()
-                                {
-                                    @Override
-                                    public void update(String progress)
-                                    {
-                                        System.out.println(progress);
-                                    }
-                                });
-                                
-                                notifyAll("Received: " + param);
-                                char[] out = new char[this.param.length()];
-                                for (int i = 0; i < this.param.length(); i++)
-                                {
-                                    out[i] = ((char) (this.param.charAt(i) - 2));
-                                }
-
-                                this.param = new String(out);
-                                receivedStrings.add(param);
-                                notifyAll("Decrypted: " + param);
-                            }
-                        };
+                        Task task = createDecryptionTask(response);
                         ThreadPool.get().performTask(task);
                     }
 
@@ -180,33 +155,7 @@ public class TesterApplicationServer
                              break;
                         }
                         
-                        Task task = new Task<String, String>(str)
-                        {
-                            @Override
-                            public void run()
-                            {
-                                addListener(new TaskObserver<String>()
-                                {
-                                    @Override
-                                    public void update(String progress)
-                                    {
-                                        System.out.println(progress);
-                                    }
-                                });
-
-                                notifyAll("Received: " + param);
-                                char[] out = new char[this.param.length()];
-                                for (int i = 0; i < this.param.length(); i++)
-                                {
-                                    out[i] = ((char) (this.param.charAt(i) + 4));
-                                }
-
-                                this.param = new String(out).trim();
-                                notifyAll("Sending re-encrypted: " + param);
-                                
-                                outputQueue.add(param);
-                            }
-                        };
+                        Task task = createReEcryptionTask(str);
                         ThreadPool.get().performTask(task);
                     }
                     
@@ -241,7 +190,73 @@ public class TesterApplicationServer
                 Logger.getLogger(TesterApplicationServer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    
+        private Task createDecryptionTask(String response)
+        {
+            return new Task<String, String>(response)
+            {
+                @Override
+                public void run()
+                {
+                    addListener(new TaskObserver<String>()
+                    {
+                        @Override
+                        public void update(String progress)
+                        {
+                            System.out.println(progress);
+                        }
+                    });
+
+                    notifyAll("Received: " + param);
+                    char[] out = new char[this.param.length()];
+                    for (int i = 0; i < this.param.length(); i++)
+                    {
+                        out[i] = ((char) (this.param.charAt(i) - 2));
+                    }
+
+                    this.param = new String(out);
+                    receivedStrings.add(param);
+                    notifyAll("Decrypted: " + param);
+                }
+            };
+        }
+        
+        private Task createReEcryptionTask(String str)
+        {
+            //Task task = TaskFactory.createTask(String, String, str new Runnable { ... 
+
+            Task task = new Task<String, String>(str)
+            {
+                @Override
+                public void run()
+                {
+                    addListener(new TaskObserver<String>()
+                    {
+                        @Override
+                        public void update(String progress)
+                        {
+                            System.out.println(progress);
+                        }
+                    });
+
+                    notifyAll("Received: " + param);
+                    char[] out = new char[this.param.length()];
+                    for (int i = 0; i < this.param.length(); i++)
+                    {
+                        out[i] = ((char) (this.param.charAt(i) + 4));
+                    }
+
+                    this.param = new String(out).trim();
+                    notifyAll("Sending re-encrypted: " + param);
+
+                    outputQueue.add(param);
+                }
+            };
+
+            return task;
+        }
     }
+
 
     public static void main(String[] args)
     {
