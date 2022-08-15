@@ -58,25 +58,9 @@ public class TesterApplicationClient
                     finished = true;
                 }
                 
-                Task task = new Task<String, String>(userInput)
-                {
-                    @Override
-                    public void run()
-                    {
-                        char[] out = new char[0xff];
-                        for (int i = 0; i < this.param.length(); i++)
-                        {
-                            out[i] = ((char) (this.param.charAt(i) + 2));
-                        }
-
-                        this.param = new String(out).trim();
-                        pw.println(this.param);
-
-                        notifyAll(param);
-                    }
-                };
-                new Thread(task).start();
-                //ThreadPool.get().performTask(task);
+                Task task = createEncrptionDispatchTask(userInput, pw);
+                //new Thread(task).start();
+                ThreadPool.get().performTask(task);
                 
             } while (!finished);
 
@@ -85,6 +69,7 @@ public class TesterApplicationClient
             socket.close();
             pw.close();
             listener.finished = true;
+            ThreadPool.get().destroyPool();
             
         } catch (IOException e)
         {
@@ -93,7 +78,28 @@ public class TesterApplicationClient
         {
             Logger.getLogger(TesterApplicationClient.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
 
+    }
+    private Task createEncrptionDispatchTask(String userInput, PrintWriter pw)
+    {
+        return new Task<String, String>(userInput)
+        {
+            @Override
+            public void run()
+            {
+                char[] out = new char[0xff];
+                for (int i = 0; i < this.param.length(); i++)
+                {
+                    out[i] = ((char) (this.param.charAt(i) + 2));
+                }
+
+                this.param = new String(out).trim();
+                pw.println(this.param);
+
+                notifyAll(param);
+            }
+        };
     }
     
     private class ChatRoomListener implements Runnable
