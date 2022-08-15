@@ -10,19 +10,18 @@ public class ADA_Assignment1
     {
         int size = 1;
         ThreadPool.get().resize(size);
-        
+
         for (int k = 0; k < 50; k++)
         {
             ThreadPool.get().performTask(new Task(1)
             {
-
 
                 @Override
                 public void run()
                 {
                     addListener(new ConcreteObserver());
 
-                    for (int i =0; i < 100; ++i)
+                    for (int i = 0; i < 100; ++i)
                     {
                         try
                         {
@@ -36,20 +35,18 @@ public class ADA_Assignment1
                     }
                 }
             });
-            
+
             try
             {
                 Thread.sleep(200);
                 ThreadPool.get().resize(++size);
 
-                
             } catch (InterruptedException ex)
             {
                 Logger.getLogger(ADA_Assignment1.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
-        
+
     }
-    
+
 }

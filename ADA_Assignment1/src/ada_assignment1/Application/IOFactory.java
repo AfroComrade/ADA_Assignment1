@@ -12,12 +12,16 @@ import java.io.PrintWriter;
  *
  * @author Yeran
  */
-
 public class IOFactory
 {
+
     private static IOFactory _instance;
-        
-    private IOFactory(){};
+
+    private IOFactory()
+    {
+    }
+
+    ;
     
     public static IOFactory get()
     {
@@ -31,10 +35,9 @@ public class IOFactory
                 e.printStackTrace();
             }
         }
-        
-        return _instance;    
-    }
 
+        return _instance;
+    }
 
     public Task createTask(String param, char io, Object stream)
     {
@@ -42,29 +45,29 @@ public class IOFactory
         {
             return null;
         }
-            
+
         if (io == 'i')
         {
             return new inputTask(param, stream);
-        }
-        else if (io == 'o')
+        } else if (io == 'o')
         {
             return new outputTask(param, stream);
         }
-        
+
         return null;
     }
 
     private class outputTask extends Task<String, String>
     {
+
         private BufferedReader br;
-        
+
         public outputTask(String param, Object stream)
         {
             super(param);
             br = (BufferedReader) stream;
         }
-        
+
         @Override
         public void run()
         {
@@ -73,17 +76,18 @@ public class IOFactory
             {
                 out[i] = ((char) (this.param.charAt(i) - 4));
             }
-            
+
             this.param = new String(out).trim();
             //br.println(this.param);
             System.out.println(param);
-            
+
             notifyAll(param);
         }
     }
-    
+
     private class inputTask extends Task<String, String>
     {
+
         private PrintWriter pw;
 
         public inputTask(String param, Object stream)
@@ -100,11 +104,11 @@ public class IOFactory
             {
                 out[i] = ((char) (this.param.charAt(i) + 2));
             }
-            
+
             this.param = new String(out).trim();
             pw.println(this.param);
-            
+
             notifyAll(param);
-        }        
+        }
     }
 }

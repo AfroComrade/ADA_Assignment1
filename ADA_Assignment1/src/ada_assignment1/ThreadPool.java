@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 public class ThreadPool
 {
+
     private static ThreadPool _instance;
 
     private volatile int currentSize;
@@ -63,7 +64,7 @@ public class ThreadPool
         System.out.println("New threadsize: " + newSize + " change: (" + (newSize - numOfThreads) + ")");
         synchronized (taskQueue)
         {
-            
+
             taskQueue.notifyAll();
         }
         while (numOfThreads < currentSize)
@@ -95,7 +96,6 @@ public class ThreadPool
 
         //if (!task.getClass().isInstance(Task.class)) // Broke the thread pool
         //    return false;
-        
         try
         {
             synchronized (taskQueue)
@@ -113,6 +113,7 @@ public class ThreadPool
 
     public class WorkerThread extends Thread
     {
+
         @Override
         public void run()
         {

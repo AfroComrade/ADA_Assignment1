@@ -11,13 +11,14 @@ package ada_assignment1;
  */
 public class TaskId
 {
+
     private int idNumber;
-    
+
     public TaskId(int idNumber)
     {
         this.idNumber = idNumber;
     }
-    
+
     public int getIdNumber()
     {
         return idNumber;

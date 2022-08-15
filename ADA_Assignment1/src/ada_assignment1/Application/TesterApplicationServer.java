@@ -60,17 +60,17 @@ public class TesterApplicationServer
             {  // block until the next client requests a connection
                 // note that the server socket could set an accept timeout
                 Socket socket = serverSocket.accept();
-               
+
                 System.out.println("Connection made with "
                         + socket.getInetAddress());
                 // start a game with this connection, note that a server
                 // might typically keep a reference to each game
                 ChatRoom chatter = new ChatRoom(socket);
                 Thread thread = new Thread(chatter);
-                
+
                 // Resize threadpool based on connections to server.
                 ThreadPool.get().resize(connections.size());
-                
+
                 thread.start();
             }
             serverSocket.close();
@@ -94,7 +94,6 @@ public class TesterApplicationServer
         private BufferedReader br;
         private Queue<String> receivedStrings;
         private Queue<String> outputQueue;
-
 
         public ChatRoom(Socket socket)
         {
@@ -128,7 +127,7 @@ public class TesterApplicationServer
                 }
                 pw.println(new String(welcome));
                 // ---
-                
+
                 String response;
                 boolean exit = false;
                 do
@@ -149,16 +148,16 @@ public class TesterApplicationServer
                     if (!receivedStrings.isEmpty())
                     {
                         String str = receivedStrings.poll().trim();
-                        
+
                         if (str.contains("QUIT"))
                         {
-                             break;
+                            break;
                         }
-                        
+
                         Task task = createReEcryptionTask(str);
                         ThreadPool.get().performTask(task);
                     }
-                    
+
                     if (!outputQueue.isEmpty())
                     {
                         String out = outputQueue.poll();
@@ -173,14 +172,13 @@ public class TesterApplicationServer
                     }
                     Thread.sleep(10);
                 } while (!exit);
-                
 
                 System.out.println("Closing connection with "
                         + socket.getInetAddress());
                 pw.close();
                 br.close();
                 socket.close();
-                
+
                 connections.remove(socket);
             } catch (IOException e)
             {
@@ -190,7 +188,7 @@ public class TesterApplicationServer
                 Logger.getLogger(TesterApplicationServer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    
+
         private Task createDecryptionTask(String response)
         {
             return new Task<String, String>(response)
@@ -220,7 +218,7 @@ public class TesterApplicationServer
                 }
             };
         }
-        
+
         private Task createReEcryptionTask(String str)
         {
             //Task task = TaskFactory.createTask(String, String, str new Runnable { ... 
@@ -256,7 +254,6 @@ public class TesterApplicationServer
             return task;
         }
     }
-
 
     public static void main(String[] args)
     {

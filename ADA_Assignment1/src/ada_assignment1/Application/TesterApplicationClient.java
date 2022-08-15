@@ -17,18 +17,19 @@ import java.util.logging.Logger;
  */
 public class TesterApplicationClient
 {
+
     private final String HOST_NAME = "localhost";
     private final int HOST_PORT = 9999;
     private Socket socket;
     private PrintWriter pw;
     private BufferedReader br;
     private ChatRoomListener listener;
-    
+
     public TesterApplicationClient()
     {
-        
+
     }
-    
+
     public void startClient()
     {
         socket = null;
@@ -42,7 +43,7 @@ public class TesterApplicationClient
             System.exit(-1);
         }
         try
-        {  
+        {
             listener = new ChatRoomListener(socket);
             new Thread(listener).start();
             pw = new PrintWriter(socket.getOutputStream(), true);
@@ -56,15 +57,15 @@ public class TesterApplicationClient
                 {
                     finished = true;
                 }
-                
+
                 //new Thread(task).start();
                 Task task = IOFactory.get().createTask(userInput, 'i', pw);
-                
+
                 //  NOTE:
                 //  Because we're calling the threadpool here to run the task, the client won't actually close until the thread pool closes
                 //  This is known. In the future we would create a new ThreadPool for 
                 ThreadPool.get().performTask(task);
-                
+
             } while (!finished);
 
             Thread.sleep(1000);
@@ -73,7 +74,7 @@ public class TesterApplicationClient
             pw.close();
             listener.finished = true;
             ThreadPool.get().destroyPool();
-            
+
         } catch (IOException e)
         {
             System.err.println("Client error with game: " + e);
@@ -81,30 +82,9 @@ public class TesterApplicationClient
         {
             Logger.getLogger(TesterApplicationClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
 
     }
-    private Task createEncrptionDispatchTask(String userInput, PrintWriter pw)
-    {
-        return new Task<String, String>(userInput)
-        {
-            @Override
-            public void run()
-            {
-                char[] out = new char[0xff];
-                for (int i = 0; i < this.param.length(); i++)
-                {
-                    out[i] = ((char) (this.param.charAt(i) + 2));
-                }
 
-                this.param = new String(out).trim();
-                pw.println(this.param);
-
-                notifyAll(param);
-            }
-        };
-    }
-    
     private class ChatRoomListener implements Runnable
     {
 
@@ -131,9 +111,9 @@ public class TesterApplicationClient
                     if (br.ready())
                     {
                         String serverResponse = br.readLine();
-                        
+
                         Task task = IOFactory.get().createTask(serverResponse.trim(), 'o', br);
-                        
+
                         ThreadPool.get().performTask(task);
                         //System.out.println(serverResponse);
                     }
@@ -153,6 +133,7 @@ public class TesterApplicationClient
         }
 
     }
+
     public static void main(String[] args)
     {
         TesterApplicationClient client = new TesterApplicationClient();
