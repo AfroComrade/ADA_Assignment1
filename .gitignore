@@ -2,3 +2,7 @@
 *.properties
 *.mf
 *.jar
+ADA_Assignment1/build.xml
+ADA_Assignment1/nbproject/build-impl.xml
+ADA_Assignment1/nbproject/project.xml
+/ADA_Assignment1/build/
