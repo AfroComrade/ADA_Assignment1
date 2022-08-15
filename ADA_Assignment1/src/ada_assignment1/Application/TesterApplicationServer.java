@@ -121,7 +121,7 @@ public class TesterApplicationServer
             try
             {
                 // Sending encrypted welcome
-                char[] welcome = new char[1000];
+                char[] welcome = new char["Welcome User!".length()];
                 for (int i = 0; i < "Welcome User!".length(); i++)
                 {
                     welcome[i] = ((char) ("Welcome User!".charAt(i) + 4));
@@ -157,7 +157,7 @@ public class TesterApplicationServer
                                 });
                                 
                                 notifyAll("Received: " + param);
-                                char[] out = new char[1000];
+                                char[] out = new char[this.param.length()];
                                 for (int i = 0; i < this.param.length(); i++)
                                 {
                                     out[i] = ((char) (this.param.charAt(i) - 2));
@@ -171,7 +171,7 @@ public class TesterApplicationServer
                         ThreadPool.get().performTask(task);
                     }
 
-                    if (receivedStrings.size() > 0)
+                    if (!receivedStrings.isEmpty())
                     {
                         String str = receivedStrings.poll().trim();
                         
@@ -195,7 +195,7 @@ public class TesterApplicationServer
                                 });
 
                                 notifyAll("Received: " + param);
-                                char[] out = new char[1000];
+                                char[] out = new char[this.param.length()];
                                 for (int i = 0; i < this.param.length(); i++)
                                 {
                                     out[i] = ((char) (this.param.charAt(i) + 4));
@@ -210,7 +210,7 @@ public class TesterApplicationServer
                         ThreadPool.get().performTask(task);
                     }
                     
-                    if (outputQueue.size() > 0)
+                    if (!outputQueue.isEmpty())
                     {
                         String out = outputQueue.poll();
                         for (Socket x : connections)
@@ -225,11 +225,11 @@ public class TesterApplicationServer
                     Thread.sleep(10);
                 } while (!exit);
                 
-                System.out.println("Closing socket.");
-                pw.close();
-                br.close();
+
                 System.out.println("Closing connection with "
                         + socket.getInetAddress());
+                pw.close();
+                br.close();
                 socket.close();
                 
                 connections.remove(socket);

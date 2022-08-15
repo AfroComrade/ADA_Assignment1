@@ -2,13 +2,11 @@ package ada_assignment1.Application;
 
 import ada_assignment1.Task;
 import ada_assignment1.ThreadPool;
-import static com.sun.corba.se.impl.util.Utility.printStackTrace;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,16 +22,16 @@ public class TesterApplicationClient
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
-    private LinkedList<Observer> observers;
+    private ChatRoomListener listener;
     
     public TesterApplicationClient()
     {
-        observers = new LinkedList<>();
+        
     }
     
     public void startClient()
     {
-        Socket socket = null;
+        socket = null;
         Scanner keyboardInput = new Scanner(System.in);
         try
         {
@@ -46,7 +44,8 @@ public class TesterApplicationClient
         PrintWriter pw;
         try
         {  
-            new Thread(new ChatRoomListener(socket)).start();
+            listener = new ChatRoomListener(socket);
+            new Thread(listener).start();
             pw = new PrintWriter(socket.getOutputStream(), true);
 
             boolean finished = false;
@@ -76,15 +75,17 @@ public class TesterApplicationClient
                         notifyAll(param);
                     }
                 };
-                ThreadPool.get().performTask(task);
+                new Thread(task).start();
+                //ThreadPool.get().performTask(task);
                 
             } while (!finished);
 
             Thread.sleep(1000);
 
-            System.out.println("Closing socket with server");
-            pw.close();
             socket.close();
+            pw.close();
+            listener.finished = true;
+            
         } catch (IOException e)
         {
             System.err.println("Client error with game: " + e);
@@ -99,6 +100,7 @@ public class TesterApplicationClient
     {
 
         private Socket socket;
+        protected boolean finished;
 
         public ChatRoomListener(Socket socket)
         {
@@ -114,7 +116,7 @@ public class TesterApplicationClient
                 BufferedReader br = new BufferedReader(new InputStreamReader(
                         socket.getInputStream()));
 
-                boolean finished = false;
+                finished = false;
                 do
                 {
                     if (br.ready())
@@ -142,19 +144,21 @@ public class TesterApplicationClient
                                 notifyAll(param);
                             }
                         };
-                        ThreadPool.get().performTask(task);
+                        //ThreadPool.get().performTask(task);
+                        new Thread(task).start();
                         //System.out.println(serverResponse);
                     }
                     Thread.sleep(10);
                 } while (!finished);
-                br.close();
                 socket.close();
+                br.close();
             } catch (IOException e)
             {
                 System.err.println("Client error with game: " + e);
                 e.printStackTrace();
             } catch (InterruptedException ex)
             {
+                ex.printStackTrace();
                 //Logger.getLogger(ChatUser.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -164,5 +168,7 @@ public class TesterApplicationClient
     {
         TesterApplicationClient client = new TesterApplicationClient();
         client.startClient();
+        // There's a thread still running somewhere
+        // Not sure if it's in here or if it's because we put a task in ThreadPool
     }
 }
