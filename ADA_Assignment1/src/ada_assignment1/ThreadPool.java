@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 public class ThreadPool
 {
-
     private static ThreadPool _instance;
 
     private volatile int currentSize;

@@ -20,8 +20,8 @@ public class TesterApplicationClient
     private final String HOST_NAME = "localhost";
     private final int HOST_PORT = 9999;
     private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
+    private PrintWriter pw;
+    private BufferedReader br;
     private ChatRoomListener listener;
     
     public TesterApplicationClient()
@@ -41,7 +41,6 @@ public class TesterApplicationClient
             System.err.println("Client could not make connection: " + e);
             System.exit(-1);
         }
-        PrintWriter pw;
         try
         {  
             listener = new ChatRoomListener(socket);
@@ -58,8 +57,12 @@ public class TesterApplicationClient
                     finished = true;
                 }
                 
-                Task task = createEncrptionDispatchTask(userInput, pw);
                 //new Thread(task).start();
+                Task task = IOFactory.get().createTask(userInput, 'i', pw);
+                
+                //  NOTE:
+                //  Because we're calling the threadpool here to run the task, the client won't actually close until the thread pool closes
+                //  This is known. In the future we would create a new ThreadPool for 
                 ThreadPool.get().performTask(task);
                 
             } while (!finished);
@@ -119,7 +122,7 @@ public class TesterApplicationClient
             try
             {
                 // create a buffered input stream for this socket
-                BufferedReader br = new BufferedReader(new InputStreamReader(
+                br = new BufferedReader(new InputStreamReader(
                         socket.getInputStream()));
 
                 finished = false;
@@ -128,30 +131,10 @@ public class TesterApplicationClient
                     if (br.ready())
                     {
                         String serverResponse = br.readLine();
-//                        if (serverResponse != null && serverResponse.equals("QUIT"))
-//                        {
-//                            break;
-//                        }
-                        Task task = new Task<String, String>(serverResponse.trim())
-                        {
-                            @Override
-                            public void run()
-                            {
-                                char[] out = new char[0xff];
-                                for (int i = 0; i < this.param.length(); i++)
-                                {
-                                    out[i] = ((char) (this.param.charAt(i) - 4));
-                                }
-
-                                this.param = new String(out).trim();
-                                //pw.println(this.param);
-                                System.out.println(param);
-
-                                notifyAll(param);
-                            }
-                        };
-                        //ThreadPool.get().performTask(task);
-                        new Thread(task).start();
+                        
+                        Task task = IOFactory.get().createTask(serverResponse.trim(), 'o', br);
+                        
+                        ThreadPool.get().performTask(task);
                         //System.out.println(serverResponse);
                     }
                     Thread.sleep(10);
